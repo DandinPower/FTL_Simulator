@@ -1,4 +1,5 @@
-from ftl.nand.page import Page, Lba
+from ftl.nand.page import Page
+from ftl.address.lba import Lba
 
 class MockBlock:
     def __init__(self):
@@ -20,13 +21,13 @@ def test_1():
     for lba in programLba:
         lba.Update(page2)
     assert page1.CheckLba(lbas[0])
-    assert len(page1._storeLbas) == 1
+    assert len(page1.storeLbas) == 1
     assert lbas[0].pageRef == page1
     assert page2.CheckLba(lbas[1])
     assert page2.CheckLba(lbas[2])
     assert page2.CheckLba(lbas[3])
     assert page2.CheckLba(lbas[4])
-    assert len(page2._storeLbas) == 4
+    assert len(page2.storeLbas) == 4
     assert lbas[1].pageRef == page2
     assert lbas[2].pageRef == page2
     assert lbas[3].pageRef == page2
@@ -47,13 +48,13 @@ def test_2():
     page2.Program(lbas)
     for lba in lbas:
         lba.Update(page2)
-    assert len(page1._storeLbas) == 0
+    assert len(page1.storeLbas) == 0
     assert page1.GetStatus() == 1 
     assert page2.CheckLba(lbas[0])
     assert page2.CheckLba(lbas[1])
     assert page2.CheckLba(lbas[2])
     assert page2.CheckLba(lbas[3])
-    assert len(page2._storeLbas) == 4
+    assert len(page2.storeLbas) == 4
     assert lbas[0].pageRef == page2
     assert lbas[1].pageRef == page2
     assert lbas[2].pageRef == page2
