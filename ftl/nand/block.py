@@ -55,6 +55,9 @@ class Block:
         for page in self.pages:
             page.Erase()
 
+    def GetTempWAF(self):
+        return (2 * NUMS_OF_PAGE_IN_BLOCK - self.invalidPage) / NUMS_OF_PAGE_IN_BLOCK
+
     def __getitem__(self, index):
         return self.pages[index]
     

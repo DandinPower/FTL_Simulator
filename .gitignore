@@ -1,3 +1,4 @@
 .pytest_cache
 __pycache__
-trace/TPCC.trace.csv
+*.csv.gz
+*.csv

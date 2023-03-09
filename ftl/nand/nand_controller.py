@@ -1,13 +1,17 @@
 from libs.logs import PrintLog
 from .block import Block, BlockType
-from collections import deque
+from libs.distribution import MultiplyWeight
+from collections import deque, Counter
 from tqdm import tqdm
 from dotenv import load_dotenv
 import os
+import matplotlib.pyplot as plt
 load_dotenv()
 
 LBA_BYTES = int(os.getenv('LBA_BYTES'))
 BLOCK_NUM = int(os.getenv('BLOCK_NUM'))
+NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
+WAF_DISTRIBUTION = os.getenv('WAF_DISTRIBUTION')
 
 class NandController:
     def __init__(self):
@@ -15,6 +19,7 @@ class NandController:
         self.freeBlockIndexes = deque([i for i in range(BLOCK_NUM)]) #寫滿pop掉, gc後append
         self.currentHotBlockIndex = None 
         self.currentColdBlockIndex = None 
+        self.distributionCounter = Counter()
         self.InitializeBlocks()
 
     def InitializeBlocks(self):
@@ -86,3 +91,26 @@ class NandController:
     def SelfCheck(self):
         for block in self.blocks:
             block.SelfCheck()
+
+    def GetTempWAF(self):
+        # 計算現在所有已滿的block的waf估計值
+        fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
+        tempWAFs = [MultiplyWeight(self.blocks[blockIndex].GetTempWAF()) for blockIndex in fullBlockIndexes]
+        if len(tempWAFs) != 0: return sum(tempWAFs) / len(tempWAFs)
+        return 2
+    
+    def UpdateBlockWAFDistribution(self):
+        # 計算現在所有已滿的block的WAF分布
+        fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
+        tempInvalidNums = [int((2 - (self.blocks[blockIndex].invalidPage / NUMS_OF_PAGE_IN_BLOCK)) * 100) for blockIndex in fullBlockIndexes]
+        self.distributionCounter.update(tempInvalidNums)
+
+    def ShowBlockWAFDistribution(self):
+        x = list(self.distributionCounter.keys())
+        y = list(self.distributionCounter.values())
+        plt.bar(x, y)
+        plt.xlabel("Estimate WAF")
+        plt.ylabel("Times")
+        plt.title("Estimate WAF Distribution")
+        plt.savefig(WAF_DISTRIBUTION)
+        plt.clf()

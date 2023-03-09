@@ -9,6 +9,8 @@ import os
 load_dotenv()
 
 NUMS_OF_LBA_IN_PAGE = int(os.getenv('NUMS_OF_LBA_IN_PAGE'))
+ACTION_SPACE = [BlockType.COLD, BlockType.HOT]
+ACTION_TYPE = os.getenv('ACTION_TYPE')
 
 class FlashTranslation:
     def __init__(self):
@@ -18,7 +20,13 @@ class FlashTranslation:
         self.garbageCollection = GarbageCollection(self.nandController, self.addressTranslation)
     
     def GetBlockType(self, request):
-        return random.choice([BlockType.HOT, BlockType.COLD])
+        if ACTION_TYPE == 'All':
+            action = ACTION_SPACE[0]
+        elif ACTION_TYPE == 'Random':
+            action = random.choice(ACTION_SPACE)
+        elif ACTION_TYPE == 'Statistic':
+            action = ACTION_SPACE[request.action]
+        return action
     
     # return actual write bytes
     def Write(self, request):
@@ -33,6 +41,6 @@ class FlashTranslation:
             programPage, writeBytes = self.nandController.Program(lbas, writeType)
             self.addressTranslation.Update(page, programPage)
             totalWriteBytes += writeBytes
-        writeBytes = self.garbageCollection.AutoCheck()
+        writeBytes, gcValid = self.garbageCollection.AutoCheck()
         totalWriteBytes += writeBytes
-        return totalWriteBytes
+        return totalWriteBytes, gcValid
