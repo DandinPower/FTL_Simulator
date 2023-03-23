@@ -13,12 +13,15 @@ class GarbageCollection:
         self.nandController = nandController
         self.addressTranslation = addressTranslation
 
-    # use in passive gc, it will only run when free space is less than setting free ratio
+    # use in passive gc, it will only run when free space is less than setting free ratio -- version 1
+    # when there is an full invalid block do garbage collection, besides don't do -- version 2
     def AutoCheck(self):
-        if self.nandController.GetFreeSpaceRatio() < (1 - AUTO_GC_RATIO): 
+        # if self.nandController.GetFreeSpaceRatio() < (1 - AUTO_GC_RATIO): 
+        if self.nandController.IsFullInvalidBlock():
             return self.Run()
         else:
             return 0, None
+        # return 0, None
 
     # implement gc because of free space is less than setting ratio
     def Run(self):

@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-N = 100
+ESTIMATED_BITS = int(os.getenv('ESTIMATED_BITS'))
+N = 10**ESTIMATED_BITS
 
 EPSILON = float(os.getenv('EPSILON'))
 EPSILON_MIN = float(os.getenv('EPSILON_MIN'))
@@ -13,5 +14,5 @@ delta = EPSILON - EPSILON_MIN
 weight_function = [EPSILON_MIN + delta * np.exp(-i / EPSILON_DECAY) for i in range(N)]
 
 def MultiplyWeight(waf):
-    index = int(waf * 100) - 100 - 1
-    return (waf - 1) * weight_function[index] + 1
+    index = int(waf * N) - N - 1
+    return waf * weight_function[index]

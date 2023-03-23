@@ -6,6 +6,7 @@ load_dotenv()
 
 WAF_AVERAGE_PERIOD = int(os.getenv('WAF_AVERAGE_PERIOD'))
 NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
+TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
 
 class WAFHistory:
     def __init__(self):
@@ -17,6 +18,7 @@ class WAFHistory:
         self.wafs = []
         self.wafFreeRatios = []
         self.gcValids = []
+        self.gcEpisodes = []
 
     def AddHistory(self, episode, writeByte, actualWriteByte, freeRatio):
         self.episodes.append(episode)
@@ -25,8 +27,9 @@ class WAFHistory:
         self.freeRatios.append(freeRatio)
 
     # gc的那個block valid page的個數
-    def AddGC(self, validNums):
+    def AddGC(self, episode, validNums):
         self.gcValids.append(validNums)
+        self.gcEpisodes.append(episode)
 
     def AddEstimateWAF(self, episode, tempWAF, freeRatio):
         self.wafEpisodes.append(episode)
@@ -65,15 +68,27 @@ class WAFHistory:
         plt.clf()
     
     def ShowEstimateWAFHistory(self, path):
-        plt.title(f'Estimate WAF')
+        plt.title(f'Estimated WAF')
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
         ax1.set_xlabel('Episodes')
         ax1.set_ylabel('WAF')
-        ax1.set_ylim(0.8, 2.5)
+        # ax1.set_ylim(0.8, 2.5)
         ax2.set_ylabel('Free Space Ratio')
         ax1.plot(self.wafEpisodes, self.wafs, label='WAF', color='red')
         ax2.plot(self.wafEpisodes, self.wafFreeRatios, label='Free Space Ratio', color='blue')
         fig.legend(loc='upper right')
+        plt.savefig(path)
+        plt.clf()
+
+    def ShowGCDistribution(self, path):
+        plt.title(f'GC Distribution Count : {len(self.gcEpisodes)}')
+        # plot the histogram
+        plt.hist(self.gcEpisodes, width= 100, bins = len(self.gcEpisodes))
+        # set the x-label and y-label
+        plt.xlabel('Episodes')
+        plt.ylabel('Frequency')
+        plt.xlim(0, TRACE_LENGTH)
+        # show the plot
         plt.savefig(path)
         plt.clf()

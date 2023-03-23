@@ -7,6 +7,7 @@ load_dotenv()
 
 TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
 WAF_RESULT = os.getenv('WAF_RESULT')
+GC_DISTRIBUTION_RESULT = os.getenv('GC_DISTRIBUTION_RESULT')
 ESTIMATE_WAF_PERIOD = int(os.getenv('ESTIMATE_WAF_PERIOD'))
 
 def main():
@@ -14,7 +15,8 @@ def main():
     history = WAFHistory()
     for i in tqdm(range(TRACE_LENGTH)):
         request, writeBytes, gcValid = hostInterface.Step()
-        if (gcValid): history.AddGC(gcValid)
+        if (gcValid): 
+            history.AddGC(i, gcValid)
         history.AddHistory(i, request.bytes, writeBytes, hostInterface.flashTranslation.nandController.GetFreeSpaceRatio())
         if i % ESTIMATE_WAF_PERIOD == 0:
             tempWAF = hostInterface.flashTranslation.nandController.GetTempWAF()
@@ -23,6 +25,7 @@ def main():
     history.Finish(hostInterface.flashTranslation.garbageCollection.count, hostInterface.flashTranslation.garbageCollection.gcFailCount)
     #history.ShowHistory(WAF_RESULT)
     history.ShowEstimateWAFHistory(WAF_RESULT)
+    history.ShowGCDistribution(GC_DISTRIBUTION_RESULT)
     hostInterface.flashTranslation.nandController.ShowBlockWAFDistribution()
     
 if __name__ == "__main__":
