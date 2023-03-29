@@ -5,19 +5,19 @@ import os
 load_dotenv()
 
 def DrawingDoubleCurve():
-    N = 100
-    EPSILON = 10
-    EPSILON_MIN = 1
-    EPSILON_DECAY = 30
+    ESTIMATED_BITS = int(os.getenv('ESTIMATED_BITS'))
+    N = 10 ** ESTIMATED_BITS
+    EPSILON = float(os.getenv('EPSILON'))
+    EPSILON_RIGHT = float(os.getenv('EPSILON_RIGHT'))
+    EPSILON_MIN = float(os.getenv('EPSILON_MIN'))
+    EPSILON_DECAY = float(os.getenv('EPSILON_DECAY'))
     delta = EPSILON - EPSILON_MIN
-    a = [EPSILON_MIN + delta * np.exp(-i / EPSILON_DECAY) for i in range(N)]
-    decay_rate = delta / (N - 1) # linear decay rate
-    a = [EPSILON - decay_rate * i for i in range(N)]
-    delta = EPSILON - EPSILON_MIN
-    a = [EPSILON_MIN + delta * np.exp(-i / EPSILON_DECAY) for i in range(N//2)]
-    b = [EPSILON_MIN + delta * np.exp(-i / EPSILON_DECAY) for i in range(N//2,-1,-1)]
-    a.extend(b)
-    plt.plot(a)
+    left = [EPSILON_MIN + delta * np.exp(-i / EPSILON_DECAY) for i in range(N//2)]
+    delta_right = EPSILON_RIGHT - EPSILON_MIN
+    right = [EPSILON_MIN + delta_right * np.exp(-i / EPSILON_DECAY) for i in range(N//2)]
+    right.sort()
+    left.extend(right)
+    plt.plot(left)
     plt.savefig('test.png')
 
 def DrawingWeightFunctionCurve():
@@ -52,3 +52,6 @@ def DrawingGCDistribution():
     # show the plot
     plt.savefig('test.png')
     plt.clf()
+
+if __name__ == "__main__":
+    DrawingDoubleCurve()

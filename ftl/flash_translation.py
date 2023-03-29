@@ -11,6 +11,7 @@ load_dotenv()
 NUMS_OF_LBA_IN_PAGE = int(os.getenv('NUMS_OF_LBA_IN_PAGE'))
 ACTION_SPACE = [BlockType.COLD, BlockType.HOT]
 ACTION_TYPE = os.getenv('ACTION_TYPE')
+ACTIVE_GC_PERIOD = int(os.getenv('ACTIVE_GC_PERIOD'))
 
 class FlashTranslation:
     def __init__(self):
@@ -18,29 +19,32 @@ class FlashTranslation:
         self.nandController = NandController()
         self.addressTranslation = AddressTranslation()
         self.garbageCollection = GarbageCollection(self.nandController, self.addressTranslation)
-    
+        self.strategyType = None
+
+    def SetStrategyType(self, strategyType):
+        self.strategyType = strategyType
+
     def GetBlockType(self, request):
-        if ACTION_TYPE == 'All':
+        if self.strategyType == 'All':
             action = ACTION_SPACE[0]
-        elif ACTION_TYPE == 'Random':
+        elif self.strategyType == 'Random':
             action = random.choice(ACTION_SPACE)
-        elif ACTION_TYPE == 'Statistic':
+        elif self.strategyType == 'Statistic':
             action = ACTION_SPACE[request.action]
         return action
     
     # return actual write bytes
-    def Write(self, request):
+    def Write(self, request, episode):
         totalWriteBytes = 0
         self.dataCacheManage.WriteCache(request)
         writeType = self.GetBlockType(request)
         while True:
-            # page 有可能是 1 ~ 4個lba
             page = self.dataCacheManage.GetCache()
             if not page: break
             lbas = ([self.addressTranslation[address] for address in page])
             programPage, writeBytes = self.nandController.Program(lbas, writeType)
             self.addressTranslation.Update(page, programPage)
             totalWriteBytes += writeBytes
-        writeBytes, gcValid = self.garbageCollection.AutoCheck()
-        totalWriteBytes += writeBytes
-        return totalWriteBytes, gcValid
+        if episode % ACTIVE_GC_PERIOD == 0:
+            totalWriteBytes += self.garbageCollection.AutoCheckByFullInvalid(episode)
+        return totalWriteBytes

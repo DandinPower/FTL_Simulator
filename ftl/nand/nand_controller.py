@@ -1,6 +1,6 @@
 from libs.logs import PrintLog
 from .block import Block, BlockType
-from libs.distribution import MultiplyWeight
+from libs.distribution import MultiplyRewardFunction
 from collections import deque, Counter
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -11,7 +11,6 @@ load_dotenv()
 LBA_BYTES = int(os.getenv('LBA_BYTES'))
 BLOCK_NUM = int(os.getenv('BLOCK_NUM'))
 NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
-WAF_DISTRIBUTION = os.getenv('WAF_DISTRIBUTION')
 ACTIVE_GC_WAF_FULL_RATIO = float(os.getenv('ACTIVE_GC_WAF_FULL_RATIO'))
 
 class NandController:
@@ -92,14 +91,22 @@ class NandController:
     def SelfCheck(self):
         for block in self.blocks:
             block.SelfCheck()
-
-    def GetTempWAF(self):
-        # 計算現在所有已滿的block的waf估計值
+    
+    def GetRewardAndWAF(self):
         fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
-        tempWAFs = [MultiplyWeight(self.blocks[blockIndex].GetTempWAF()) for blockIndex in fullBlockIndexes]
-        # tempWAFs = [self.blocks[blockIndex].GetTempWAF() for blockIndex in fullBlockIndexes]
-        if len(tempWAFs) != 0: return sum(tempWAFs) / len(tempWAFs)
-        return 2
+        tempWAFs = []
+        rewards = []
+        for blockIndex in fullBlockIndexes:
+            waf = self.blocks[blockIndex].GetTempWAF()
+            tempWAFs.append(waf)
+            rewards.append(MultiplyRewardFunction(waf))
+        waf = 1.5
+        reward = 0
+        if len(tempWAFs) != 0: 
+            # 計算現在所有已滿的block的waf估計值
+            waf =  sum(tempWAFs) / len(tempWAFs)
+            reward = sum(rewards) / len(rewards)
+        return reward, waf
     
     def UpdateBlockWAFDistribution(self):
         # 計算現在所有已滿的block的WAF分布
@@ -108,17 +115,6 @@ class NandController:
         self.distributionCounter.update(tempInvalidNums)
 
     # not inefficient 或許改成每Estimate waf step去檢查一次 然後清掉所有符合條件的block
-    def IsFullInvalidBlock(self):
-        fullInvalidBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes and self.blocks[i].invalidPage / NUMS_OF_PAGE_IN_BLOCK > ACTIVE_GC_WAF_FULL_RATIO] 
-        return bool(fullInvalidBlockIndexes)
-
-    def ShowBlockWAFDistribution(self):
-        x = list(self.distributionCounter.keys())
-        x = [float(i) for i in x]
-        y = list(self.distributionCounter.values())
-        plt.bar(x, y, width=0.005)
-        plt.xlabel("Estimated WAF")
-        plt.ylabel("Times")
-        plt.title("Estimated WAF Distribution")
-        plt.savefig(WAF_DISTRIBUTION)
-        plt.clf()
+    def GetFullInvalidBlock(self):
+        fullInvalidBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes and self.blocks[i].invalidPage / NUMS_OF_PAGE_IN_BLOCK >= ACTIVE_GC_WAF_FULL_RATIO] 
+        return fullInvalidBlockIndexes
