@@ -22,4 +22,5 @@ def GetRewardFunction():
 def MultiplyRewardFunction(waf):
     reward_function = GetRewardFunction()
     index = int(waf * N) - N - 1
-    return waf * reward_function[index]
+    # return waf * reward_function[index]
+    return reward_function[index]

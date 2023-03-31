@@ -24,7 +24,7 @@ class History:
     def ShowRewardAndWafHistory(self, path):
         # Assuming self.rewards and self.rewardWafEpisodes are lists of rewards and episodes
         # with the same length, and window_size is the number of episodes to use for the MA
-        window_size = 500
+        window_size = 300
 
         # Calculate the MA using Pandas
         ma_rewards = pd.Series(self.rewards).rolling(window_size, min_periods=1).mean()
@@ -36,7 +36,7 @@ class History:
         ax1.set_xlabel('Episodes')
         ax1.set_ylabel('Reward')
         ax2.set_ylabel('WAF')
-        ax1.set_ylim(-12, 12)
+        ax1.set_ylim(-8, 10)
         ax2.set_ylim(0.8, 2.5)
         # ax1.set_yscale('log')
         # Plot the reward and WAF data
@@ -68,7 +68,7 @@ class History:
         total = 0
         for count in counts: total += count
         plt.title(f'GC Distribution Count : {total}')
-        plt.hist(values, weights=counts, width= 100, bins=len(values))
+        plt.hist(values, weights=counts, width= 400, bins=len(values))
         plt.xlabel('Episodes')
         plt.xlim(0, TRACE_LENGTH)
         plt.ylabel('Counts')
