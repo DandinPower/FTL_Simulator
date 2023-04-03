@@ -9,6 +9,9 @@ class DataCacheManage:
     def __init__(self):
         self._writeBuffer = WriteBuffer()
 
+    def Reset(self):
+        self._writeBuffer = WriteBuffer()
+
     def WriteCache(self, request):
         lbaNums = request.bytes // LBA_BYTES
         if request.bytes % LBA_BYTES != 0: lbaNums += 1

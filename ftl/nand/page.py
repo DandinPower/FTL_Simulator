@@ -20,6 +20,11 @@ class Page:
         self.storeLbas = []
         self.isFree = True
 
+    # reset to initail state
+    def Reset(self):
+        self.storeLbas.clear()
+        self.isFree = True
+
     def Program(self, lbas) -> None:
         # 如果欲寫入的lba數量超過總容量
         if len(lbas) > NUMS_OF_LBA_IN_PAGE - len(self.storeLbas):

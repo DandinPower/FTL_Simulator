@@ -21,9 +21,17 @@ class FlashTranslation:
         self.garbageCollection = GarbageCollection(self.nandController, self.addressTranslation)
         self.strategyType = None
 
+    def Reset(self):
+        self.dataCacheManage.Reset()
+        self.nandController.Reset()
+        self.addressTranslation.Reset()
+        self.garbageCollection.Reset()
+
+    # oonly work for testing strategy
     def SetStrategyType(self, strategyType):
         self.strategyType = strategyType
 
+    # only work for testing strategy
     def GetBlockType(self, request):
         if self.strategyType == 'All':
             action = ACTION_SPACE[0]
@@ -34,7 +42,7 @@ class FlashTranslation:
         return action
     
     # return actual write bytes
-    def Write(self, request, episode):
+    def Write(self, request, step):
         totalWriteBytes = 0
         self.dataCacheManage.WriteCache(request)
         writeType = self.GetBlockType(request)
@@ -45,6 +53,22 @@ class FlashTranslation:
             programPage, writeBytes = self.nandController.Program(lbas, writeType)
             self.addressTranslation.Update(page, programPage)
             totalWriteBytes += writeBytes
-        if episode % ACTIVE_GC_PERIOD == 0:
-            totalWriteBytes += self.garbageCollection.AutoCheckByFullInvalid(episode)
+        if step % ACTIVE_GC_PERIOD == 0:
+            totalWriteBytes += self.garbageCollection.AutoCheckByFullInvalid(step)
+        return totalWriteBytes
+    
+    # work for RL strategy
+    def WriteByAction(self, request, step, action):
+        totalWriteBytes = 0
+        self.dataCacheManage.WriteCache(request)
+        writeType = ACTION_SPACE[action]
+        while True:
+            page = self.dataCacheManage.GetCache()
+            if not page: break
+            lbas = ([self.addressTranslation[address] for address in page])
+            programPage, writeBytes = self.nandController.Program(lbas, writeType)
+            self.addressTranslation.Update(page, programPage)
+            totalWriteBytes += writeBytes
+        if step % ACTIVE_GC_PERIOD == 0:
+            totalWriteBytes += self.garbageCollection.AutoCheckByFullInvalid(step)
         return totalWriteBytes

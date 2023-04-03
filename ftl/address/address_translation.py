@@ -4,6 +4,9 @@ class AddressTranslation:
     def __init__(self):
         self.map = dict()
 
+    def Reset(self):
+        self.map.clear()
+
     def __getitem__(self, address):
         temp = self.map.get(address)
         if temp == None:

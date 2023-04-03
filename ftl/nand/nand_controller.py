@@ -22,6 +22,14 @@ class NandController:
         self.distributionCounter = Counter()
         self.InitializeBlocks()
 
+    def Reset(self):
+        for block in self.blocks:
+            block.Reset()
+        self.freeBlockIndexes = deque([i for i in range(BLOCK_NUM)])
+        self.currentHotBlockIndex = None 
+        self.currentColdBlockIndex = None 
+        self.distributionCounter = Counter()
+
     def InitializeBlocks(self):
         PrintLog('Build Virtual Blocks...')
         for i in tqdm(range(BLOCK_NUM)):

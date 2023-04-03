@@ -19,6 +19,13 @@ class Block:
         self.currentPageIndex = 0
         self.type = BlockType.NONE
 
+    def Reset(self):
+        self.invalidPage = 0
+        self.currentPageIndex = 0
+        self.type = BlockType.NONE
+        for page in self.pages:
+            page.Reset()
+
     def IsFull(self):
         return self.currentPageIndex == NUMS_OF_PAGE_IN_BLOCK
 

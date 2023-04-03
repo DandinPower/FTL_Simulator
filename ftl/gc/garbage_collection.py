@@ -11,6 +11,10 @@ class GCHistory:
     def __init__(self) -> None:
         self.gcSuccessEpisodes = Counter()
         self.gcFailEpisodes = Counter()
+
+    def Reset(self):
+        self.gcSuccessEpisodes = Counter()
+        self.gcFailEpisodes = Counter()
     
     def Success(self, episode):
         self.gcSuccessEpisodes.update([episode])
@@ -24,6 +28,9 @@ class GarbageCollection:
         self.addressTranslation = addressTranslation
         self.gcHistory = GCHistory()
         
+    def Reset(self):
+        self.gcHistory.Reset()
+
     # use in passive gc, it will only run when free space is less than setting free ratio -- version 1
     # when there is an full invalid block do garbage collection, besides don't do -- version 2
     def AutoCheckByFullInvalid(self, episode):

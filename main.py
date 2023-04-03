@@ -16,18 +16,18 @@ SIMULATE_PROGRESS_RESULT = os.getenv('SIMULATE_PROGRESS_RESULT')
 
 def strategy(strategyType):
     hostInterface = HostInterface()
-    hostInterface.flashTranslation.SetStrategyType(strategyType)
+    hostInterface.SetStrategyType(strategyType)
     history = History()
     for i in tqdm(range(TRACE_LENGTH)):
         request, writeBytes = hostInterface.Step()
-        freeSpaceRatio = hostInterface.flashTranslation.nandController.GetFreeSpaceRatio()
+        freeSpaceRatio = hostInterface.GetFreeSpaceRatio()
         if i % ESTIMATE_WAF_PERIOD == 0:
-            reward, waf = hostInterface.flashTranslation.nandController.GetRewardAndWAF()
-            hostInterface.flashTranslation.nandController.UpdateBlockWAFDistribution()
+            reward, waf = hostInterface.GetRewardAndWAF()
+            hostInterface.UpdateBlockWAFDistribution()
             history.AddRewardAndWaf(i, reward, waf, freeSpaceRatio)
-    history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.flashTranslation.nandController.distributionCounter)
+    history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
     history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
-    history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.flashTranslation.garbageCollection.gcHistory.gcSuccessEpisodes)
+    history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
 
 def main():
     strategyTypes = STRATEGY_TYPES.split(',')
