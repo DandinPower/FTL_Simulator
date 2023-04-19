@@ -12,6 +12,26 @@ LBA_BYTES = int(os.getenv('LBA_BYTES'))
 BLOCK_NUM = int(os.getenv('BLOCK_NUM'))
 NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
 ACTIVE_GC_WAF_FULL_RATIO = float(os.getenv('ACTIVE_GC_WAF_FULL_RATIO'))
+MA_PERIOD = int(os.getenv('MA_PERIOD'))
+CHANGE_RATIO_ALPHA = float(os.getenv('CHANGE_RATIO_ALPHA'))
+
+class RewardGenerator:
+    def __init__(self):
+        self.history = []
+
+    def Reset(self):
+        self.history.clear()
+    
+    def Add(self, reward):
+        self.history.append(reward)
+    
+    def GetReward(self,):
+        if len(self.history) < MA_PERIOD + 1:
+            raise MemoryError('The length of reward history is not long enough to calculate.')
+        prevRewardMA = sum(self.history[-MA_PERIOD - 1 : -1]) / MA_PERIOD
+        currentRewardMA = sum(self.history[-MA_PERIOD :]) / MA_PERIOD 
+        changeRatio = abs((prevRewardMA - currentRewardMA) / prevRewardMA)
+        return self.history[-1] * (1 / (1 + CHANGE_RATIO_ALPHA * changeRatio))
 
 class NandController:
     def __init__(self):
@@ -20,6 +40,7 @@ class NandController:
         self.currentHotBlockIndex = None 
         self.currentColdBlockIndex = None 
         self.distributionCounter = Counter()
+        self.rewardGenerator = RewardGenerator()
         self.InitializeBlocks()
 
     def Reset(self):
@@ -29,6 +50,7 @@ class NandController:
         self.currentHotBlockIndex = None 
         self.currentColdBlockIndex = None 
         self.distributionCounter = Counter()
+        self.rewardGenerator.Reset()
 
     def InitializeBlocks(self):
         PrintLog('Build Virtual Blocks...')
@@ -115,7 +137,14 @@ class NandController:
             waf =  sum(tempWAFs) / len(tempWAFs)
             reward = sum(rewards) / len(rewards)
         return reward, waf
-    
+
+    def UpdateRewardMA(self):
+        reward, waf = self.GetRewardAndWAF()
+        self.rewardGenerator.Add(reward)
+
+    def GetChangeRatioReward(self):
+        return self.rewardGenerator.GetReward()
+
     def UpdateBlockWAFDistribution(self):
         # 計算現在所有已滿的block的WAF分布
         fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]

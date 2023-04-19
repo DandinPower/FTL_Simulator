@@ -13,6 +13,7 @@ STRATEGY_TYPES = os.getenv('STRATEGY_TYPES')
 GC_DISTRIBUTION_RESULT = os.getenv('GC_DISTRIBUTION_RESULT') 
 WAF_DISTRIBUTION_RESULT = os.getenv('WAF_DISTRIBUTION_RESULT')
 SIMULATE_PROGRESS_RESULT = os.getenv('SIMULATE_PROGRESS_RESULT')
+MA_PERIOD = int(os.getenv('MA_PERIOD'))
 
 def strategy(strategyType):
     hostInterface = HostInterface()
@@ -20,14 +21,19 @@ def strategy(strategyType):
     history = History()
     for i in tqdm(range(TRACE_LENGTH)):
         request, writeBytes = hostInterface.Step()
-        freeSpaceRatio = hostInterface.GetFreeSpaceRatio()
         if i % ESTIMATE_WAF_PERIOD == 0:
-            reward, waf = hostInterface.GetRewardAndWAF()
-            hostInterface.UpdateBlockWAFDistribution()
-            history.AddRewardAndWaf(i, reward, waf, freeSpaceRatio)
-    history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
-    history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
-    history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
+            #freeSpaceRatio = hostInterface.GetFreeSpaceRatio()
+            #reward, waf = hostInterface.GetRewardAndWAF()
+            #hostInterface.UpdateBlockWAFDistribution()
+            hostInterface.flashTranslation.nandController.UpdateRewardMA()
+            if i >= MA_PERIOD * ESTIMATE_WAF_PERIOD:
+                reward = hostInterface.flashTranslation.nandController.GetChangeRatioReward()
+                history.AddChangeRatioReward(i, reward)
+            # history.AddRewardAndWaf(i, reward, waf, freeSpaceRatio)
+    # history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
+    # history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
+    # history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
+    history.ShowChangeRatioReward(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
 
 def main():
     strategyTypes = STRATEGY_TYPES.split(',')

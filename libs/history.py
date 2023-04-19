@@ -15,6 +15,10 @@ class History:
         self.rewards = []
         self.wafs = []
 
+    def AddChangeRatioReward(self, episode, reward):
+        self.rewardWafEpisodes.append(episode)
+        self.rewards.append(reward)
+
     def AddRewardAndWaf(self, episode, reward, waf, freeRatio):
         self.rewardWafEpisodes.append(episode)
         self.rewards.append(reward)
@@ -47,6 +51,20 @@ class History:
         ax1.plot(self.rewardWafEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
 
         # Add legend and save the plot
+        fig.legend(loc='upper right')
+        plt.savefig(path)
+        plt.clf()
+
+    def ShowChangeRatioReward(self, path):
+        window_size = 300
+        ma_rewards = pd.Series(self.rewards).rolling(window_size, min_periods=1).mean()
+        plt.title(f'ChangeRatio Reward Progress')
+        fig, ax1 = plt.subplots()
+        ax1.set_xlabel('Episodes')
+        ax1.set_ylabel('Reward')
+        ax1.set_ylim(-8, 10)
+        ax1.plot(self.rewardWafEpisodes, self.rewards, label='Reward', color='red')
+        ax1.plot(self.rewardWafEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
         fig.legend(loc='upper right')
         plt.savefig(path)
         plt.clf()
