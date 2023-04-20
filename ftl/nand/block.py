@@ -5,6 +5,7 @@ import os
 load_dotenv()
 
 NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
+COUNT_RATIO = float(os.getenv('COUNT_RATIO'))
 
 class BlockType(enum.Enum):
     NONE = 1
@@ -18,11 +19,13 @@ class Block:
         self.invalidPage = 0
         self.currentPageIndex = 0
         self.type = BlockType.NONE
+        self.penaltyCount = 0
 
     def Reset(self):
         self.invalidPage = 0
         self.currentPageIndex = 0
         self.type = BlockType.NONE
+        self.penaltyCount = 0
         for page in self.pages:
             page.Reset()
 
@@ -57,6 +60,10 @@ class Block:
 
     def Erase(self):
         self.Reset()
+
+    def UpdatePenaltyCount(self):
+        if 1 - (self.invalidPage / NUMS_OF_PAGE_IN_BLOCK) <= COUNT_RATIO:
+            self.penaltyCount += 1
 
     def GetTempWAF(self):
         return (2 * NUMS_OF_PAGE_IN_BLOCK - self.invalidPage) / NUMS_OF_PAGE_IN_BLOCK

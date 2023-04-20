@@ -15,7 +15,7 @@ WAF_DISTRIBUTION_RESULT = os.getenv('WAF_DISTRIBUTION_RESULT')
 SIMULATE_PROGRESS_RESULT = os.getenv('SIMULATE_PROGRESS_RESULT')
 CHANGE_RATIO_PROGRESS_RESULT = os.getenv('CHANGE_RATIO_PROGRESS_RESULT')
 MA_PERIOD = int(os.getenv('MA_PERIOD'))
-CHANGE_RATIO_REWARD = bool(os.getenv('CHANGE_RATIO_REWARD'))
+CHANGE_RATIO_REWARD = bool(int(os.getenv('CHANGE_RATIO_REWARD')))
 
 def strategy(strategyType):
     hostInterface = HostInterface()
@@ -35,7 +35,8 @@ def strategy(strategyType):
     history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
     history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
     history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
-    history.ShowChangeRatioReward(f'{CHANGE_RATIO_PROGRESS_RESULT}/{strategyType}.png')
+    if CHANGE_RATIO_REWARD:
+        history.ShowChangeRatioReward(f'{CHANGE_RATIO_PROGRESS_RESULT}/{strategyType}.png')
 
 def main():
     strategyTypes = STRATEGY_TYPES.split(',')

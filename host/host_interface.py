@@ -7,7 +7,7 @@ load_dotenv()
 TRACE_PATH = os.getenv('TRACE_PATH')
 TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
 
-class HostInterface:
+class HostInterface: 
     def __init__(self):
         #self.hostRequestQueue = HostRequestQueue()
         self.episode = 0

@@ -1,6 +1,6 @@
 from libs.logs import PrintLog
 from .block import Block, BlockType
-from libs.distribution import MultiplyRewardFunction
+from libs.distribution import MultiplyRewardFunction, MultiplyPenalty
 from collections import deque, Counter
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
 ACTIVE_GC_WAF_FULL_RATIO = float(os.getenv('ACTIVE_GC_WAF_FULL_RATIO'))
 MA_PERIOD = int(os.getenv('MA_PERIOD'))
 CHANGE_RATIO_ALPHA = float(os.getenv('CHANGE_RATIO_ALPHA'))
+COUNT_PENALTY = bool(int(os.getenv('COUNT_PENALTY')))
 
 class RewardRecorder:
     def __init__(self):
@@ -154,7 +155,10 @@ class NandController:
         for blockIndex in blockIndexes:
             waf = self.blocks[blockIndex].GetTempWAF()
             tempWAFs.append(waf)
-            rewards.append(MultiplyRewardFunction(waf))
+            reward = MultiplyRewardFunction(waf)
+            if COUNT_PENALTY:
+                reward = MultiplyPenalty(reward, self.blocks[blockIndex].penaltyCount) 
+            rewards.append(reward)
         waf = 1.5
         reward = 0
         if len(tempWAFs) != 0: 
@@ -167,6 +171,11 @@ class NandController:
     def UpdateBlockWAFDistribution(self, blockIndexes):
         tempInvalidNums = [str(round((2 - (self.blocks[blockIndex].invalidPage / NUMS_OF_PAGE_IN_BLOCK)), 2)) for blockIndex in blockIndexes]
         self.distributionCounter.update(tempInvalidNums)
+
+    # 更新現在所有已滿的block的penalty count
+    def UpdateBlockPenaltyCount(self, blockIndexes):
+        for blockIndex in blockIndexes:
+            self.blocks[blockIndex].UpdatePenaltyCount()
 
     # 更新目前的reward資訊
     def UpdateReward(self, reward):
@@ -181,6 +190,7 @@ class NandController:
         # 取得所有寫滿的blockIndex
         fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
         self.UpdateBlockWAFDistribution(fullBlockIndexes)
+        self.UpdateBlockPenaltyCount((fullBlockIndexes))
         reward, waf = self.GetRewardAndWAF(fullBlockIndexes)
         self.UpdateReward(reward)
         self.UpdateWaf(waf)
