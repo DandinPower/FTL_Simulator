@@ -11,6 +11,7 @@ EPSILON_RIGHT = float(os.getenv('EPSILON_RIGHT'))
 EPSILON_MIN = float(os.getenv('EPSILON_MIN'))
 EPSILON_DECAY = float(os.getenv('EPSILON_DECAY'))
 
+PENALTY_BASE = float(os.getenv('PENALTY_BASE'))
 PENALTY_ALPHA = float(os.getenv('PENALTY_ALPHA'))
 
 delta = EPSILON - EPSILON_MIN
@@ -29,4 +30,4 @@ def MultiplyPenalty(reward, penaltyCount):
     # original 
     # return reward * (1 / (1 + PENALTY_ALPHA * penaltyCount))
     # log
-    return reward * (1 / (1 + PENALTY_ALPHA * math.log(1 + penaltyCount)))
+    return reward * (1 / (1 + PENALTY_ALPHA * math.pow(PENALTY_BASE, penaltyCount)))
