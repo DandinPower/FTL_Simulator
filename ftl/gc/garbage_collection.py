@@ -34,7 +34,7 @@ class GarbageCollection:
     # use in passive gc, it will only run when free space is less than setting free ratio -- version 1
     # when there is an full invalid block do garbage collection, besides don't do -- version 2
     def AutoCheckByFullInvalid(self, episode):
-        fullInvalidsBlockIdxs = self.nandController.GetFullInvalidBlock()
+        fullInvalidsBlockIdxs = self.nandController.GetGCBLock()
         if fullInvalidsBlockIdxs:
             totalWriteBytes = 0
             for blockIdx in fullInvalidsBlockIdxs:

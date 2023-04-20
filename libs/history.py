@@ -15,9 +15,12 @@ class History:
         self.rewards = []
         self.wafs = []
 
+        self.changeRatioEpisodes = []
+        self.changeRatioRewards = []
+
     def AddChangeRatioReward(self, episode, reward):
-        self.rewardWafEpisodes.append(episode)
-        self.rewards.append(reward)
+        self.changeRatioEpisodes.append(episode)
+        self.changeRatioRewards.append(reward)
 
     def AddRewardAndWaf(self, episode, reward, waf, freeRatio):
         self.rewardWafEpisodes.append(episode)
@@ -26,14 +29,8 @@ class History:
         self.rewardWafFreeRatios.append(freeRatio)
     
     def ShowRewardAndWafHistory(self, path):
-        # Assuming self.rewards and self.rewardWafEpisodes are lists of rewards and episodes
-        # with the same length, and window_size is the number of episodes to use for the MA
         window_size = 300
-
-        # Calculate the MA using Pandas
         ma_rewards = pd.Series(self.rewards).rolling(window_size, min_periods=1).mean()
-
-        # Create the plot
         plt.title(f'Reward And WAF Progress')
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
@@ -42,29 +39,23 @@ class History:
         ax2.set_ylabel('WAF')
         ax1.set_ylim(-8, 10)
         ax2.set_ylim(0.8, 2.5)
-        # ax1.set_yscale('log')
-        # Plot the reward and WAF data
         ax1.plot(self.rewardWafEpisodes, self.rewards, label='Reward', color='red')
         ax2.plot(self.rewardWafEpisodes, self.wafs, label='WAF', color='blue')
-
-        # Plot the MA line
         ax1.plot(self.rewardWafEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
-
-        # Add legend and save the plot
         fig.legend(loc='upper right')
         plt.savefig(path)
         plt.clf()
 
     def ShowChangeRatioReward(self, path):
         window_size = 300
-        ma_rewards = pd.Series(self.rewards).rolling(window_size, min_periods=1).mean()
+        ma_rewards = pd.Series(self.changeRatioRewards).rolling(window_size, min_periods=1).mean()
         plt.title(f'ChangeRatio Reward Progress')
         fig, ax1 = plt.subplots()
         ax1.set_xlabel('Episodes')
         ax1.set_ylabel('Reward')
         ax1.set_ylim(-8, 10)
-        ax1.plot(self.rewardWafEpisodes, self.rewards, label='Reward', color='red')
-        ax1.plot(self.rewardWafEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
+        ax1.plot(self.changeRatioEpisodes, self.changeRatioRewards, label='Reward', color='red')
+        ax1.plot(self.changeRatioEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
         fig.legend(loc='upper right')
         plt.savefig(path)
         plt.clf()

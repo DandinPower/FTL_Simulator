@@ -41,17 +41,23 @@ class HostInterface:
     def GetFreeSpaceRatio(self):
         return self.flashTranslation.nandController.GetFreeSpaceRatio()
 
-    def GetRewardAndWAF(self):
-        return self.flashTranslation.nandController.GetRewardAndWAF()
-    
-    def UpdateBlockWAFDistribution(self):
-        self.flashTranslation.nandController.UpdateBlockWAFDistribution()
-
     def GetDistributionCounter(self):
         return self.flashTranslation.nandController.distributionCounter
 
     def GetGCSuccessEpisodes(self):
         return self.flashTranslation.garbageCollection.gcHistory.gcSuccessEpisodes        
+
+    def EstimateStatus(self):
+        self.flashTranslation.nandController.EstimateStatus()
+
+    def GetReward(self):
+        return self.flashTranslation.nandController.GetReward()
+
+    def GetWaf(self):
+        return self.flashTranslation.nandController.GetWaf()
+    
+    def GetChangeRatioReward(self):
+        return self.flashTranslation.nandController.GetChangeRatioReward()
 
     # environment step for testing strategy
     def Step(self):
@@ -68,7 +74,8 @@ class HostInterface:
         totalWriteBytes = self.FioByAction(self.currentRequest, action)
         self.step += 1
         self.currentRequest = self.hostRequestQueueAction.GetWriteRequest()
-        reward, waf = self.GetRewardAndWAF()
+        self.EstimateStatus()
+        reward = self.GetReward()
         return reward, self.currentRequest
     
     def FioByAction(self, request, action):

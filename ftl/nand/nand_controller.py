@@ -15,7 +15,7 @@ ACTIVE_GC_WAF_FULL_RATIO = float(os.getenv('ACTIVE_GC_WAF_FULL_RATIO'))
 MA_PERIOD = int(os.getenv('MA_PERIOD'))
 CHANGE_RATIO_ALPHA = float(os.getenv('CHANGE_RATIO_ALPHA'))
 
-class RewardGenerator:
+class RewardRecorder:
     def __init__(self):
         self.history = []
 
@@ -25,13 +25,31 @@ class RewardGenerator:
     def Add(self, reward):
         self.history.append(reward)
     
-    def GetReward(self,):
+    # 取得考慮了ma變化率的reward
+    def GetChangeRatioReward(self,):
         if len(self.history) < MA_PERIOD + 1:
             raise MemoryError('The length of reward history is not long enough to calculate.')
         prevRewardMA = sum(self.history[-MA_PERIOD - 1 : -1]) / MA_PERIOD
         currentRewardMA = sum(self.history[-MA_PERIOD :]) / MA_PERIOD 
         changeRatio = abs((prevRewardMA - currentRewardMA) / prevRewardMA)
+        # print(f'prev: {prevRewardMA}, current:{currentRewardMA}, changeRatio: {changeRatio}')
         return self.history[-1] * (1 / (1 + CHANGE_RATIO_ALPHA * changeRatio))
+
+    def GetReward(self,):
+        return self.history[-1]
+
+class WafRecorder:
+    def __init__(self):
+        self.history = []
+    
+    def Reset(self):
+        self.history.clear() 
+    
+    def Add(self, waf):
+        self.history.append(waf)
+
+    def GetWaf(self):
+        return self.history[-1]
 
 class NandController:
     def __init__(self):
@@ -40,7 +58,8 @@ class NandController:
         self.currentHotBlockIndex = None 
         self.currentColdBlockIndex = None 
         self.distributionCounter = Counter()
-        self.rewardGenerator = RewardGenerator()
+        self.rewardRecorder = RewardRecorder()
+        self.wafRecorder = WafRecorder()
         self.InitializeBlocks()
 
     def Reset(self):
@@ -50,7 +69,8 @@ class NandController:
         self.currentHotBlockIndex = None 
         self.currentColdBlockIndex = None 
         self.distributionCounter = Counter()
-        self.rewardGenerator.Reset()
+        self.rewardRecorder.Reset()
+        self.wafRecorder.Reset()
 
     def InitializeBlocks(self):
         PrintLog('Build Virtual Blocks...')
@@ -122,11 +142,16 @@ class NandController:
         for block in self.blocks:
             block.SelfCheck()
     
-    def GetRewardAndWAF(self):
-        fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
+    # not inefficient 或許改成每Estimate waf step去檢查一次 然後清掉所有符合條件的block
+    def GetGCBLock(self):
+        fullInvalidBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes and self.blocks[i].invalidPage / NUMS_OF_PAGE_IN_BLOCK >= ACTIVE_GC_WAF_FULL_RATIO] 
+        return fullInvalidBlockIndexes
+
+    # 計算目前狀態的reward跟waf
+    def GetRewardAndWAF(self, blockIndexes):
         tempWAFs = []
         rewards = []
-        for blockIndex in fullBlockIndexes:
+        for blockIndex in blockIndexes:
             waf = self.blocks[blockIndex].GetTempWAF()
             tempWAFs.append(waf)
             rewards.append(MultiplyRewardFunction(waf))
@@ -137,21 +162,37 @@ class NandController:
             waf =  sum(tempWAFs) / len(tempWAFs)
             reward = sum(rewards) / len(rewards)
         return reward, waf
-
-    def UpdateRewardMA(self):
-        reward, waf = self.GetRewardAndWAF()
-        self.rewardGenerator.Add(reward)
-
-    def GetChangeRatioReward(self):
-        return self.rewardGenerator.GetReward()
-
-    def UpdateBlockWAFDistribution(self):
-        # 計算現在所有已滿的block的WAF分布
-        fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
-        tempInvalidNums = [str(round((2 - (self.blocks[blockIndex].invalidPage / NUMS_OF_PAGE_IN_BLOCK)), 2)) for blockIndex in fullBlockIndexes]
+    
+    # 計算現在所有已滿的block的WAF分布
+    def UpdateBlockWAFDistribution(self, blockIndexes):
+        tempInvalidNums = [str(round((2 - (self.blocks[blockIndex].invalidPage / NUMS_OF_PAGE_IN_BLOCK)), 2)) for blockIndex in blockIndexes]
         self.distributionCounter.update(tempInvalidNums)
 
-    # not inefficient 或許改成每Estimate waf step去檢查一次 然後清掉所有符合條件的block
-    def GetFullInvalidBlock(self):
-        fullInvalidBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes and self.blocks[i].invalidPage / NUMS_OF_PAGE_IN_BLOCK >= ACTIVE_GC_WAF_FULL_RATIO] 
-        return fullInvalidBlockIndexes
+    # 更新目前的reward資訊
+    def UpdateReward(self, reward):
+        self.rewardRecorder.Add(reward)
+
+    # 更新目前的waf資訊
+    def UpdateWaf(self, waf):
+        self.wafRecorder.Add(waf)
+    
+    # 每一個Estimate週期執行一次
+    def EstimateStatus(self):
+        # 取得所有寫滿的blockIndex
+        fullBlockIndexes = [item for i, item in enumerate(range(BLOCK_NUM)) if i not in self.freeBlockIndexes]
+        self.UpdateBlockWAFDistribution(fullBlockIndexes)
+        reward, waf = self.GetRewardAndWAF(fullBlockIndexes)
+        self.UpdateReward(reward)
+        self.UpdateWaf(waf)
+
+    # 取得reward
+    def GetReward(self):
+        return self.rewardRecorder.GetReward()
+
+    # 取得考慮變化率的reward
+    def GetChangeRatioReward(self):
+        return self.rewardRecorder.GetChangeRatioReward()
+    
+    # 取得waf
+    def GetWaf(self):
+        return self.wafRecorder.GetWaf()

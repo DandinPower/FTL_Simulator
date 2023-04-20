@@ -56,11 +56,7 @@ class Block:
             page.SelfCheck()
 
     def Erase(self):
-        self.invalidPage = 0
-        self.currentPageIndex = 0
-        self.type = BlockType.NONE
-        for page in self.pages:
-            page.Erase()
+        self.Reset()
 
     def GetTempWAF(self):
         return (2 * NUMS_OF_PAGE_IN_BLOCK - self.invalidPage) / NUMS_OF_PAGE_IN_BLOCK
