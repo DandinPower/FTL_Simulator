@@ -1,4 +1,5 @@
 from sklearn.preprocessing import StandardScaler
+from .lba_dict import GetLbaFreqDict
 from .q_model import QModel
 import torch
 import pandas as pd
@@ -21,6 +22,7 @@ class ValueNet:
         self.scalerBytes = StandardScaler()
         self.prevLba = 0
         self.qModel.load_state_dict(torch.load(MODEL_WEIGHT_PATH))
+        self.lbaFreqDict = GetLbaFreqDict()
         self.Standardize()
 
     def Standardize(self):
@@ -36,7 +38,9 @@ class ValueNet:
         bytes = request.bytes
         standardized_lba_diff = self.scalerLbaDiff.transform(np.array(lbaDiff).reshape(1, -1))
         standardized_bytes = self.scalerBytes.transform(np.array(bytes).reshape(1, -1))
-        input_data = np.concatenate((standardized_lba_diff, standardized_bytes), axis=1)
+        standardized_lba = np.array(self.lbaFreqDict[str(request.lba)]).reshape(1, -1)
+        # standardized_lba = self.lbaFreqDict[]
+        input_data = np.concatenate((standardized_lba, standardized_lba_diff, standardized_bytes), axis=1)
         with torch.no_grad():
             output = self.qModel(torch.tensor(input_data, dtype=torch.float32, device=self.device))
             _, predicted_labels = torch.max(output, dim=1)

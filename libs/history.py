@@ -43,7 +43,7 @@ class History:
         ax2.plot(self.rewardWafEpisodes, self.wafs, label='WAF', color='blue')
         ax1.plot(self.rewardWafEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
         fig.legend(loc='upper right')
-        plt.savefig(path)
+        plt.savefig(path, dpi=300)
         plt.clf()
 
     def ShowChangeRatioReward(self, path):
@@ -57,7 +57,7 @@ class History:
         ax1.plot(self.changeRatioEpisodes, self.changeRatioRewards, label='Reward', color='red')
         ax1.plot(self.changeRatioEpisodes, ma_rewards, label=f'{window_size}-episode MA', color='green')
         fig.legend(loc='upper right')
-        plt.savefig(path)
+        plt.savefig(path, dpi=300)
         plt.clf()
 
     def ShowBlockWAFDistribution(self, WAF_DISTRIBUTION, counter):
@@ -68,7 +68,7 @@ class History:
         plt.xlabel("Estimated WAF")
         plt.ylabel("Times")
         plt.title("Estimated WAF Distribution")
-        plt.savefig(WAF_DISTRIBUTION)
+        plt.savefig(WAF_DISTRIBUTION, dpi=300)
         plt.clf()
     
     def ShowGCDistribution(self, path, gcCounter):
@@ -81,5 +81,5 @@ class History:
         plt.xlabel('Episodes')
         plt.xlim(0, TRACE_LENGTH)
         plt.ylabel('Counts')
-        plt.savefig(path)
+        plt.savefig(path, dpi=300)
         plt.clf()
