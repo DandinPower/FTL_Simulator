@@ -1,7 +1,7 @@
-tensorflow
 torch
 numpy
 pandas
 tqdm
 matplotlib
 python-dotenv
+scikit-learn
