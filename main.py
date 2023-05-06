@@ -7,7 +7,7 @@ import os
 load_dotenv()
 
 TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
-
+TRACE_RUN_LENGTH = int(os.getenv('TRACE_RUN_LENGTH'))
 ESTIMATE_PERIOD = int(os.getenv('ESTIMATE_PERIOD'))
 STRATEGY_TYPES = os.getenv('STRATEGY_TYPES')
 GC_DISTRIBUTION_RESULT = os.getenv('GC_DISTRIBUTION_RESULT') 
@@ -17,11 +17,12 @@ CHANGE_RATIO_PROGRESS_RESULT = os.getenv('CHANGE_RATIO_PROGRESS_RESULT')
 MA_PERIOD = int(os.getenv('MA_PERIOD'))
 CHANGE_RATIO_REWARD = bool(int(os.getenv('CHANGE_RATIO_REWARD')))
 
+
 def strategy(strategyType):
     hostInterface = HostInterface()
     hostInterface.SetStrategyType(strategyType)
     history = History()
-    for i in tqdm(range(TRACE_LENGTH)):
+    for i in tqdm(range(TRACE_RUN_LENGTH)):
         request, writeBytes = hostInterface.Step()
         if i % ESTIMATE_PERIOD == 0:
             hostInterface.EstimateStatus()

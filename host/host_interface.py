@@ -6,6 +6,7 @@ load_dotenv()
 
 TRACE_PATH = os.getenv('TRACE_PATH')
 TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
+START_POINT = int(os.getenv('START_POINT'))
 
 class HostInterface: 
     def __init__(self):
@@ -14,6 +15,7 @@ class HostInterface:
         self.step = 0
         self.hostRequestQueueAction = HostRequestQueueAction()
         self.hostRequestQueueAction.LoadTrace(TRACE_PATH, TRACE_LENGTH)
+        self.hostRequestQueueAction._idx = START_POINT
         self.flashTranslation = FlashTranslation()
         self.currentRequest = None
 

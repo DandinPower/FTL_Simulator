@@ -6,7 +6,7 @@ import os
 load_dotenv()
 
 NUMS_OF_PAGE_IN_BLOCK = int(os.getenv('NUMS_OF_PAGE_IN_BLOCK'))
-TRACE_LENGTH = int(os.getenv('TRACE_LENGTH'))
+TRACE_RUN_LENGTH = int(os.getenv('TRACE_RUN_LENGTH'))
 
 class History:
     def __init__(self):
@@ -79,7 +79,7 @@ class History:
         plt.title(f'GC Distribution Count : {total}')
         plt.hist(values, weights=counts, width= 400, bins=len(values))
         plt.xlabel('Episodes')
-        plt.xlim(0, TRACE_LENGTH)
+        plt.xlim(0, TRACE_RUN_LENGTH)
         plt.ylabel('Counts')
         plt.savefig(path, dpi=300)
         plt.clf()
