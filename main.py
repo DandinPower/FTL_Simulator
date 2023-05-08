@@ -1,5 +1,6 @@
 from host.host_interface import HostInterface
 from libs.history import History
+from libs.report import WriteReport
 import multiprocessing
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ SIMULATE_PROGRESS_RESULT = os.getenv('SIMULATE_PROGRESS_RESULT')
 CHANGE_RATIO_PROGRESS_RESULT = os.getenv('CHANGE_RATIO_PROGRESS_RESULT')
 MA_PERIOD = int(os.getenv('MA_PERIOD'))
 CHANGE_RATIO_REWARD = bool(int(os.getenv('CHANGE_RATIO_REWARD')))
-
+REPORT_RESULT = os.getenv('REPORT_RESULT')
 
 def strategy(strategyType):
     hostInterface = HostInterface()
@@ -38,6 +39,11 @@ def strategy(strategyType):
     history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
     if CHANGE_RATIO_REWARD:
         history.ShowChangeRatioReward(f'{CHANGE_RATIO_PROGRESS_RESULT}/{strategyType}.png')
+    # write simulation report 
+    gcCount = len(hostInterface.GetGCSuccessEpisodes().keys())
+    rewardSum = hostInterface.GetTotalReward()
+    coldCount, hotCount = hostInterface.GetColdHotCount()
+    WriteReport(f'{REPORT_RESULT}/{strategyType}.txt', TRACE_RUN_LENGTH, gcCount, rewardSum, coldCount, hotCount)
 
 def main():
     strategyTypes = STRATEGY_TYPES.split(',')

@@ -15,7 +15,8 @@ ACTION_TYPE = os.getenv('ACTION_TYPE')
 ACTIVE_GC_PERIOD = int(os.getenv('ACTIVE_GC_PERIOD'))
 
 class FlashTranslation:
-    def __init__(self):
+    def __init__(self, hostInterface):
+        self.hostInterface = hostInterface
         self.dataCacheManage = DataCacheManage()
         self.nandController = NandController()
         self.addressTranslation = AddressTranslation()
@@ -51,6 +52,10 @@ class FlashTranslation:
         totalWriteBytes = 0
         self.dataCacheManage.WriteCache(request)
         writeType = self.GetBlockType(request)
+        if writeType == BlockType.COLD:
+            self.hostInterface.coldActionCount += 1
+        else:
+            self.hostInterface.hotActionCount += 1
         while True:
             page = self.dataCacheManage.GetCache()
             if not page: break

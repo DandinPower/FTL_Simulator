@@ -37,7 +37,7 @@ class History:
         ax1.set_xlabel('Episodes')
         ax1.set_ylabel('Reward')
         ax2.set_ylabel('WAF')
-        ax1.set_ylim(-8, 10)
+        ax1.set_ylim(-10, 15)
         ax2.set_ylim(0.8, 2.5)
         ax1.plot(self.rewardWafEpisodes, self.rewards, label='Reward', color='red')
         ax2.plot(self.rewardWafEpisodes, self.wafs, label='WAF', color='blue')
