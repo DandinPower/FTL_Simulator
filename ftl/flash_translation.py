@@ -39,7 +39,8 @@ class FlashTranslation:
         if self.strategyType == 'All':
             action = ACTION_SPACE[0]
         elif self.strategyType == 'Random':
-            action = random.choice(ACTION_SPACE)
+            action = random.choices(ACTION_SPACE, weights = [3, 1], k = 1)
+            action = action[0]
         elif self.strategyType == 'Statistic':
             action = ACTION_SPACE[request.action]
         elif self.strategyType == 'PreTrain':
