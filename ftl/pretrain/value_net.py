@@ -1,6 +1,6 @@
 from sklearn.preprocessing import StandardScaler
 from .lba_dict import GetLbaFreqDict
-from .q_model import QModel
+from .q_model import QModel, QModel_Deep
 import torch
 import pandas as pd
 import numpy as np
@@ -10,6 +10,7 @@ load_dotenv()
 
 MODEL_WEIGHT_PATH = os.getenv('MODEL_WEIGHT_PATH')
 TRACE_PATH = os.getenv('TRACE_PATH')
+MODEL_TYPE = os.getenv('MODEL_TYPE')
 
 class ValueNet:
     def __init__(self) -> None:
@@ -17,7 +18,10 @@ class ValueNet:
     
     def Initialize(self):
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self.qModel = QModel().to(self.device).eval()
+        if MODEL_TYPE == 'deep':
+            self.qModel = QModel_Deep().to(self.device)
+        elif MODEL_TYPE == 'normal':
+            self.qModel = QModel().to(self.device)
         self.scalerLbaDiff = StandardScaler()
         self.scalerBytes = StandardScaler()
         self.prevLba = 0

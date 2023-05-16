@@ -34,9 +34,6 @@ def strategy(strategyType):
             waf = hostInterface.GetWaf()
             freeSpaceRatio = hostInterface.GetFreeSpaceRatio()
             history.AddRewardAndWaf(i, reward, waf, freeSpaceRatio)
-    history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
-    history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
-    history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
     if CHANGE_RATIO_REWARD:
         history.ShowChangeRatioReward(f'{CHANGE_RATIO_PROGRESS_RESULT}/{strategyType}.png')
     # write simulation report 
@@ -44,7 +41,10 @@ def strategy(strategyType):
     rewardSum = hostInterface.GetTotalReward()
     coldCount, hotCount = hostInterface.GetColdHotCount()
     WriteReport(f'{REPORT_RESULT}/{strategyType}.txt', TRACE_RUN_LENGTH, gcCount, rewardSum, coldCount, hotCount)
-
+    history.ShowBlockWAFDistribution(f'{WAF_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetDistributionCounter())
+    history.ShowRewardAndWafHistory(f'{SIMULATE_PROGRESS_RESULT}/{strategyType}.png')
+    history.ShowGCDistribution(f'{GC_DISTRIBUTION_RESULT}/{strategyType}.png', hostInterface.GetGCSuccessEpisodes())
+    
 def main():
     strategyTypes = STRATEGY_TYPES.split(',')
     processes = []
