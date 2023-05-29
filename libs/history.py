@@ -77,7 +77,8 @@ class History:
         total = 0
         for count in counts: total += count
         plt.title(f'GC Distribution Count : {total}')
-        plt.hist(values, weights=counts, width= 400, bins=len(values))
+        if len(values) != 0:
+            plt.hist(values, weights=counts, width= 400, bins=len(values))
         plt.xlabel('Episodes')
         plt.xlim(0, TRACE_RUN_LENGTH)
         plt.ylabel('Counts')
