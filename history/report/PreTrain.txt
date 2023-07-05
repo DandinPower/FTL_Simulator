@@ -1,0 +1,9 @@
+Simulation Report
+-----------------------------------
+Simulate Length:                                  100000
+Total Gc Times:                                      181
+Total Reward:                                 -124723.92
+Cold Action Count:                                 63272
+Hot Action Count:                                  36728
+Cold Action Ratio:                                  0.63
+Hot Action Ratio:                                   0.37
