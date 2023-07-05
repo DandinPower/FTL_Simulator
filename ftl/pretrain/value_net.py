@@ -2,6 +2,7 @@ from sklearn.preprocessing import StandardScaler
 from .lba_dict import GetLbaFreqDict
 from .q_model import QModel, QModel_Deep
 import torch
+from torch import autocast
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
@@ -11,6 +12,15 @@ load_dotenv()
 MODEL_WEIGHT_PATH = os.getenv('MODEL_WEIGHT_PATH')
 TRACE_PATH = os.getenv('TRACE_PATH')
 MODEL_TYPE = os.getenv('MODEL_TYPE')
+PRECISION = os.getenv('PRECISION')
+
+def GetModelPrecision(type):
+    if type == 'fp32':
+        return torch.float32 
+    elif type == 'fp16':
+        return torch.float16 
+    elif type == 'bp16':
+        return torch.bfloat16
 
 class ValueNet:
     def __init__(self) -> None:
@@ -26,6 +36,8 @@ class ValueNet:
         self.scalerBytes = StandardScaler()
         self.prevLba = 0
         self.qModel.load_state_dict(torch.load(MODEL_WEIGHT_PATH))
+        # self.qModel.half()
+        # self.qModel.bfloat16()
         self.lbaFreqDict = GetLbaFreqDict()
         self.Standardize()
 
@@ -43,9 +55,10 @@ class ValueNet:
         standardized_lba_diff = self.scalerLbaDiff.transform(np.array(lbaDiff).reshape(1, -1))
         standardized_bytes = self.scalerBytes.transform(np.array(bytes).reshape(1, -1))
         standardized_lba = np.array(self.lbaFreqDict[str(request.lba)]).reshape(1, -1)
-        # standardized_lba = self.lbaFreqDict[]
         input_data = np.concatenate((standardized_lba, standardized_lba_diff, standardized_bytes), axis=1)
         with torch.no_grad():
-            output = self.qModel(torch.tensor(input_data, dtype=torch.float32, device=self.device))
-            _, predicted_labels = torch.max(output, dim=1)
+            input_data = torch.tensor(input_data, dtype=torch.float32, device=self.device)
+            with autocast(device_type='cuda', dtype=GetModelPrecision(PRECISION)):
+                output = self.qModel(input_data)
+                _, predicted_labels = torch.max(output, dim=1)
         return predicted_labels[0].cpu().numpy()

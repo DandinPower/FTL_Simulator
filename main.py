@@ -93,5 +93,5 @@ def MultiEvaluation():
         PretrainStrategy(modelIndex, MODEL_BASE_PATH)
 
 if __name__ == "__main__":
-    MultiEvaluation()
-    # main()
+    # MultiEvaluation()
+    main()

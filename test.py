@@ -69,6 +69,39 @@ def WriteReport(path, length, gcCount, rewardSum, coldCount, hotCount):
     with open(path, 'w') as file:
         file.write(report)
 
+def test_quantization():
+    import torch
+    import torch.nn as nn
+    import torch.quantization as quantization
+
+    # Define a simple class model
+    class MyModel(nn.Module):
+        def __init__(self):
+            super(MyModel, self).__init__()
+            self.fc = nn.Linear(10, 1)
+
+        def forward(self, x):
+            return self.fc(x)
+
+    # Create a random float32 tensor as input
+    input_tensor = torch.randn(1, 10)
+    # Create an instance of the model
+    model = MyModel()
+
+    # Perform a forward pass to initialize the model's parameters
+    output_tensor = model(input_tensor)
+
+    # Convert the model to qint8 format using quantization
+    quantized_model = quantization.QuantWrapper(model)
+    quantized_model.qconfig = quantization.default_qconfig
+    quantized_model = quantization.quantize_dynamic(quantized_model, {nn.Linear}, dtype=torch.qint8)
+
+    # Perform a forward pass with the quantized model and input tensor
+    output_tensor_qint8 = quantized_model(input_tensor)
+    # Print the original output and quantized output
+    print("Original Output:\n", output_tensor)
+    print("Quantized Output:\n", output_tensor_qint8.dequantize().to(torch.float))
+
 if __name__ == "__main__":
     # DrawingDoubleCurve()
     WriteReport('test.txt', 100000, 243, 122308.15021111527, 19399, 80601)
